@@ -1,0 +1,5 @@
+{
+  "adminPassword": "change-this-password",
+  "telegramBotToken": "123456789:AA_example_token",
+  "telegramChatId": "123456789"
+}
