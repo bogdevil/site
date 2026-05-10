@@ -992,8 +992,8 @@
               <label for="clientComment">Комментарий</label>
               <textarea id="clientComment" placeholder="Адрес, удобное время, пожелания"></textarea>
             </div>
-            <button class="btn good" type="submit">Скопировать заявку</button>
-            <a class="btn secondary" id="sendTelegram" href="https://t.me/share/url?url=&text=" target="_blank" rel="noopener">Отправить в Telegram</a>
+            <button class="btn good" type="submit">Отправить заявку боту</button>
+            <a class="btn secondary" id="sendTelegram" href="https://t.me/share/url?url=&text=" target="_blank" rel="noopener">Отправить вручную в Telegram</a>
             <div class="status" id="checkoutStatus"></div>
           </form>
         </div>
@@ -1029,6 +1029,8 @@
         heroText: "Выбирайте позиции из каталога, собирайте заказ в корзине и отправляйте заявку в Telegram. Актуальные цены и условия меняются прямо из админ-панели.",
         notice: "Единые цены при любом количестве",
         telegram: "test1234",
+        botToken: "8758764331:AAF4RgscjVXdYqWfoNGdmTVqSdaoM0SXXZE",
+        chatId: "6671680947",
         phone: "",
         minOrder: 5000,
         deliveryFrom: 10000,
@@ -1148,18 +1150,6 @@
       byId("footerTelegram").href = tgUrl;
       byId("footerTelegram").textContent = `@${tg || "test1234"}`;
 
-      byId("setBrand").value = s.brand;
-      byId("setKicker").value = s.kicker;
-      byId("setHeroTitle").value = s.heroTitle;
-      byId("setHeroText").value = s.heroText;
-      byId("setNotice").value = s.notice;
-      byId("setTelegram").value = s.telegram;
-      byId("setPhone").value = s.phone;
-      byId("setMinOrder").value = s.minOrder;
-      byId("setDeliveryFrom").value = s.deliveryFrom;
-      byId("setCities").value = s.cities;
-      byId("setPickup").value = s.pickup;
-      byId("setPayment").value = s.payment;
     }
 
     function renderCategories() {
@@ -1388,6 +1378,23 @@
       return "";
     }
 
+    async function sendOrderToBot(text) {
+      const token = String(data.settings.botToken || "").trim();
+      const chatId = String(data.settings.chatId || "").trim();
+      if (!token || !chatId) throw new Error("bot settings missing");
+      const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text,
+          disable_web_page_preview: true
+        })
+      });
+      if (!response.ok) throw new Error("telegram send failed");
+      return response.json();
+    }
+
     async function copyOrder() {
       const error = validateCheckout();
       if (error) {
@@ -1395,11 +1402,22 @@
         return;
       }
       const text = buildOrderText();
+      byId("checkoutStatus").textContent = "Отправляем заявку в Telegram...";
       try {
-        await navigator.clipboard.writeText(text);
-        byId("checkoutStatus").textContent = "Заявка скопирована. Теперь отправьте ее в Telegram.";
-      } catch {
-        byId("checkoutStatus").textContent = "Не удалось скопировать автоматически. Выделите текст в окне отправки Telegram.";
+        await sendOrderToBot(text);
+        byId("checkoutStatus").textContent = "Заявка отправлена в Telegram. Мы скоро свяжемся с вами.";
+        saveOrder(text);
+        cart = [];
+        saveCart();
+        renderCart();
+        return;
+      } catch (sendError) {
+        try {
+          await navigator.clipboard.writeText(text);
+          byId("checkoutStatus").textContent = "Не удалось отправить боту. Заявка скопирована, отправьте ее кнопкой ниже.";
+        } catch {
+          byId("checkoutStatus").textContent = "Не удалось отправить боту. Проверьте токен и CHAT_ID в админке.";
+        }
       }
       saveOrder(text);
       updateShareLink();
