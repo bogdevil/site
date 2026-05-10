@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#153d35">
+  <title>Админ-панель — MR OPT64</title>
+  <style>
+    :root {
+      --bg: #f6f2ea;
+      --paper: #fffdf8;
+      --ink: #17211f;
+      --muted: #68746f;
+      --line: #ded8cc;
+      --dark: #153d35;
+      --accent: #f06449;
+      --teal: #20a39e;
+      --ok: #2d8f62;
+      --danger: #a83226;
+      --shadow: 0 20px 60px rgba(23, 33, 31, .12);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 10% 0, rgba(32, 163, 158, .16), transparent 32%),
+        linear-gradient(135deg, #fffdf8, var(--bg));
+      color: var(--ink);
+      line-height: 1.45;
+    }
+
+    button, input, textarea, select { font: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; }
+    .hidden { display: none !important; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      min-height: 64px;
+      padding: 12px clamp(14px, 4vw, 48px);
+      border-bottom: 1px solid rgba(222, 216, 204, .9);
+      background: rgba(255, 253, 248, .92);
+      backdrop-filter: blur(18px);
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      font-weight: 950;
+    }
+
+    .mark {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      color: #fff;
+      background: linear-gradient(135deg, var(--dark), var(--teal));
+      flex: 0 0 auto;
+    }
+
+    .btn, .ghost {
+      min-height: 42px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 14px;
+      border: 0;
+      text-decoration: none;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .btn { color: #fff; background: var(--dark); box-shadow: 0 12px 24px rgba(21, 61, 53, .16); }
+    .btn.accent { background: var(--accent); box-shadow: 0 12px 24px rgba(240, 100, 73, .22); }
+    .btn.ok { background: var(--ok); }
+    .ghost { border: 1px solid var(--line); background: #fff; color: var(--ink); }
+    .danger { color: var(--danger) !important; border-color: #edb9b0 !important; background: #fff1ef !important; }
+
+    .shell {
+      width: min(1220px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 28px 0 60px;
+    }
+
+    .login {
+      display: grid;
+      gap: 16px;
+      max-width: 480px;
+      margin: 10vh auto 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      padding: clamp(18px, 4vw, 28px);
+      box-shadow: var(--shadow);
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { margin-bottom: 6px; font-size: clamp(30px, 5vw, 50px); line-height: 1; }
+    h2 { margin-bottom: 4px; font-size: clamp(24px, 3vw, 36px); }
+    h3 { margin-bottom: 12px; }
+    .muted { color: var(--muted); }
+
+    .field { display: grid; gap: 6px; }
+    .field label { color: var(--muted); font-size: 13px; font-weight: 850; }
+    .field input, .field textarea, .field select {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      padding: 10px 11px;
+      outline: none;
+    }
+    .field textarea { min-height: 96px; resize: vertical; }
+    .field input:focus, .field textarea:focus, .field select:focus {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 4px rgba(32, 163, 158, .12);
+    }
+
+    .dashboard { display: none; }
+    .dashboard.open { display: block; }
+
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .tab {
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      padding: 0 13px;
+      font-weight: 900;
+    }
+    .tab.active { border-color: var(--dark); background: var(--dark); color: #fff; }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 14px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-top: 12px;
+    }
+
+    .products-layout {
+      display: grid;
+      grid-template-columns: minmax(250px, .85fr) minmax(0, 1.15fr);
+      gap: 12px;
+    }
+
+    .list {
+      display: grid;
+      gap: 8px;
+      max-height: 640px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .item {
+      display: grid;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 10px;
+    }
+    .item.active { border-color: var(--teal); box-shadow: 0 0 0 4px rgba(32, 163, 158, .12); }
+    .item strong { line-height: 1.22; }
+
+    .mini-actions {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+    .mini-actions button {
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      font-weight: 900;
+    }
+
+    .json textarea {
+      min-height: 310px;
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 13px;
+    }
+
+    .status {
+      min-height: 24px;
+      margin-top: 12px;
+      color: var(--dark);
+      font-weight: 850;
+    }
+
+    .order-text {
+      min-height: 130px;
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 13px;
+    }
+
+    @media (max-width: 900px) {
+      .hero { align-items: stretch; flex-direction: column; }
+      .grid-2, .grid-3, .products-layout { grid-template-columns: 1fr; }
+      .topbar { align-items: flex-start; flex-direction: column; }
+      .topbar .actions { margin-top: 0; }
+    }
+
+    @media (max-width: 540px) {
+      .shell { width: min(100% - 20px, 1220px); padding-top: 18px; }
+      .tabs { overflow: auto; flex-wrap: nowrap; padding-bottom: 2px; }
+      .tab { flex: 0 0 auto; }
+      .btn, .ghost { width: 100%; }
+      .mini-actions { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html">
+      <span class="mark">M</span>
+      <span>Админ-панель</span>
+    </a>
+    <div class="actions">
+      <a class="ghost" href="index.html">Открыть сайт</a>
+      <button class="ghost" id="logoutBtn" type="button">Выйти</button>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="login" id="loginBox">
+      <div>
+        <h1>Вход</h1>
+        <p class="muted">Введите PIN администратора, чтобы менять каталог, цены и настройки сайта.</p>
+      </div>
+      <div class="field">
+        <label for="pinInput">PIN</label>
+        <input id="pinInput" type="password" autocomplete="current-password" placeholder="Например, admin64">
+      </div>
+      <button class="btn accent" id="loginBtn" type="button">Войти</button>
+      <div class="status" id="loginStatus"></div>
+    </section>
+
+    <section class="dashboard" id="dashboard">
+      <div class="hero">
+        <div>
+          <h1 id="adminTitle">MR OPT64</h1>
+          <p class="muted">Управление витриной, товарами, условиями и локальными заявками.</p>
+        </div>
+        <div class="actions">
+          <button class="btn ok" id="saveAllBtn" type="button">Сохранить все</button>
+          <button class="ghost" id="refreshBtn" type="button">Обновить</button>
+        </div>
+      </div>
+
+      <nav class="tabs" id="tabs">
+        <button class="tab active" type="button" data-tab="settings">Сайт</button>
+        <button class="tab" type="button" data-tab="products">Товары</button>
+        <button class="tab" type="button" data-tab="orders">Заявки</button>
+        <button class="tab" type="button" data-tab="data">Данные</button>
+      </nav>
+
+      <section class="page panel" data-page="settings">
+        <div class="grid-2">
+          <div class="card">
+            <h3>Главный экран</h3>
+            <div class="field"><label>Название сайта</label><input id="setBrand"></div>
+            <div class="field"><label>Текст над заголовком</label><input id="setKicker"></div>
+            <div class="field"><label>Заголовок</label><textarea id="setHeroTitle"></textarea></div>
+            <div class="field"><label>Описание</label><textarea id="setHeroText"></textarea></div>
+            <div class="field"><label>Заметка на карточке</label><input id="setNotice"></div>
+          </div>
+          <div class="card">
+            <h3>Условия и контакты</h3>
+            <div class="grid-2">
+              <div class="field"><label>Telegram username</label><input id="setTelegram" placeholder="test1234"></div>
+              <div class="field"><label>Телефон</label><input id="setPhone" placeholder="+7..."></div>
+              <div class="field"><label>Bot token</label><input id="setBotToken" placeholder="123456:ABC..."></div>
+              <div class="field"><label>CHAT_ID</label><input id="setChatId" placeholder="6671680947"></div>
+              <div class="field"><label>Минимальный заказ, ₽</label><input id="setMinOrder" type="number" min="0"></div>
+              <div class="field"><label>Доставка от, ₽</label><input id="setDeliveryFrom" type="number" min="0"></div>
+            </div>
+            <div class="field"><label>Города</label><input id="setCities"></div>
+            <div class="field"><label>Самовывоз</label><input id="setPickup"></div>
+            <div class="field"><label>Оплата</label><input id="setPayment"></div>
+            <div class="field"><label>Новый PIN администратора</label><input id="setPin" type="password" placeholder="Оставьте пустым, чтобы не менять"></div>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn ok" id="saveSettingsBtn" type="button">Сохранить настройки</button>
+        </div>
+      </section>
+
+      <section class="page panel hidden" data-page="products">
+        <div class="products-layout">
+          <div class="card">
+            <div class="actions" style="justify-content: space-between; margin-top: 0;">
+              <h3 style="margin:0;">Товары</h3>
+              <button class="ghost" id="newProductBtn" type="button">Новый</button>
+            </div>
+            <div class="field" style="margin: 12px 0;">
+              <label for="productSearch">Быстрый поиск</label>
+              <input id="productSearch" placeholder="Название или категория">
+            </div>
+            <div class="list" id="productList"></div>
+          </div>
+
+          <div class="card">
+            <h3 id="productFormTitle">Новый товар</h3>
+            <div class="field"><label>Название</label><textarea id="prodTitle"></textarea></div>
+            <div class="grid-2">
+              <div class="field"><label>Категория</label><input id="prodCategory" list="categoryOptions"></div>
+              <div class="field"><label>Цена</label><input id="prodPrice" type="number" step="0.01" min="0"></div>
+            </div>
+            <datalist id="categoryOptions"></datalist>
+            <div class="grid-3">
+              <div class="field"><label>Единица</label><input id="prodUnit" placeholder="шт"></div>
+              <div class="field"><label>Статус</label><input id="prodStock" placeholder="В наличии"></div>
+              <div class="field"><label>Метка</label><input id="prodTag" placeholder="80 г"></div>
+            </div>
+            <div class="field"><label>Описание</label><textarea id="prodDesc"></textarea></div>
+            <div class="field"><label>Ссылка на изображение</label><input id="prodImage" placeholder="https://..."></div>
+            <div class="actions">
+              <button class="btn ok" id="saveProductBtn" type="button">Сохранить товар</button>
+              <button class="ghost danger" id="deleteProductBtn" type="button">Удалить товар</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page panel hidden" data-page="orders">
+        <div class="actions" style="justify-content: space-between; margin-top: 0;">
+          <div>
+            <h2>Заявки</h2>
+            <p class="muted">Заявки сохраняются локально после копирования или отправки из корзины.</p>
+          </div>
+          <button class="ghost danger" id="clearOrdersBtn" type="button">Очистить заявки</button>
+        </div>
+        <div class="list" id="ordersList"></div>
+      </section>
+
+      <section class="page panel hidden" data-page="data">
+        <div class="grid-2">
+          <div class="card json">
+            <h3>Экспорт</h3>
+            <div class="field"><label>JSON настроек и каталога</label><textarea id="exportData" readonly></textarea></div>
+            <div class="actions">
+              <button class="btn ok" id="copyExportBtn" type="button">Скопировать JSON</button>
+              <button class="ghost danger" id="resetBtn" type="button">Сбросить сайт</button>
+            </div>
+          </div>
+          <div class="card json">
+            <h3>Импорт</h3>
+            <div class="field"><label>Вставьте JSON</label><textarea id="importData"></textarea></div>
+            <div class="actions">
+              <button class="btn accent" id="importBtn" type="button">Применить импорт</button>
+            </div>
+            <p class="muted">Импорт заменит настройки и каталог в этом браузере.</p>
+          </div>
+        </div>
+      </section>
+
+      <div class="status" id="adminStatus"></div>
+    </section>
+  </main>
+
+  <script>
+    const STORE_KEY = "mr_opt64_site_v2";
+    const ORDERS_KEY = "mr_opt64_orders_v2";
+    const ADMIN_SESSION_KEY = "mr_opt64_admin_open";
+
+    const DEFAULT_DATA = {
+      settings: {
+        brand: "MR OPT64",
+        kicker: "Каталог, корзина и быстрая заявка",
+        heroTitle: "Товары по понятным ценам для дома и бизнеса",
+        heroText: "Выбирайте позиции из каталога, собирайте заказ в корзине и отправляйте заявку в Telegram. Актуальные цены и условия меняются прямо из админ-панели.",
+        notice: "Единые цены при любом количестве",
+        telegram: "test1234",
+        botToken: "8758764331:AAF4RgscjVXdYqWfoNGdmTVqSdaoM0SXXZE",
+        chatId: "6671680947",
+        phone: "",
+        minOrder: 5000,
+        deliveryFrom: 10000,
+        cities: "Саратов / Энгельс",
+        pickup: "Самовывоз по договоренности.",
+        payment: "Финальные детали подтверждаются в Telegram.",
+        adminPin: "admin64"
+      },
+      products: [
+        { id: "p1", category: "Корма для кошек — сухие", title: "Kitekat Мясной пир для взрослых кошек, 1.3 кг", price: 300, unit: "шт", stock: "В наличии", tag: "Kitekat", description: "Сухой полнорационный корм. Цена единая при любом количестве.", image: "" },
+        { id: "p2", category: "Корма для кошек — сухие", title: "Kitekat Мясной пир для взрослых кошек, 800 г", price: 178, unit: "шт", stock: "В наличии", tag: "Kitekat", description: "Удобный формат для регулярных заказов.", image: "" },
+        { id: "p3", category: "Корма для кошек — сухие", title: "Kitekat Мясной пир для взрослых кошек, 350 г", price: 89, unit: "шт", stock: "В наличии", tag: "Kitekat", description: "Компактная упаковка для пробного заказа.", image: "" },
+        { id: "p4", category: "Корма для кошек — влажные", title: "Kitekat влажный корм 85 г, все вкусы", price: 16.8, unit: "шт", stock: "В наличии", tag: "85 г", description: "Соус и желе, ассортимент уточняется при заявке.", image: "" },
+        { id: "p5", category: "Корма для кошек — влажные", title: "Felix влажный корм 75 г, все вкусы", price: 20, unit: "шт", stock: "В наличии", tag: "75 г", description: "Популярные вкусы в соусе и желе.", image: "" },
+        { id: "p6", category: "Корма для кошек — влажные", title: "Whiskas влажный корм 75 г, все вкусы", price: 21, unit: "шт", stock: "В наличии", tag: "75 г", description: "Ассортимент вкусов уточняется при подтверждении.", image: "" },
+        { id: "p7", category: "Шоколад", title: "Alpen Gold 80 г, все вкусы", price: 60, unit: "шт", stock: "В наличии", tag: "80 г", description: "Плиточный шоколад для розничных и офисных заказов.", image: "" },
+        { id: "p8", category: "Шоколад", title: "Milka молочный шоколад 80 г", price: 75, unit: "шт", stock: "В наличии", tag: "Milka", description: "Классический молочный вкус.", image: "" },
+        { id: "p9", category: "Шоколад", title: "Milka клубника со сливками, 80 г", price: 75, unit: "шт", stock: "В наличии", tag: "Milka", description: "Двухслойная начинка с мягким вкусом.", image: "" },
+        { id: "p10", category: "Шоколад", title: "Milka с фундуком, 80 г", price: 75, unit: "шт", stock: "В наличии", tag: "Milka", description: "Молочный шоколад с фундуком.", image: "" },
+        { id: "p11", category: "Чай и кофе", title: "Greenfield Kenyan Sunrise, 100 пакетиков", price: 225, unit: "шт", stock: "В наличии", tag: "100 шт", description: "Черный чай для дома, офиса и торговых точек.", image: "" },
+        { id: "p12", category: "Ассорти", title: "Молоко сгущенное Рогачевъ цельное 8.5%, 380 г", price: 105, unit: "шт", stock: "В наличии", tag: "380 г", description: "Сгущенное молоко с сахаром.", image: "" }
+      ]
+    };
+
+    let data = loadData();
+    let selectedProductId = "";
+    const byId = id => document.getElementById(id);
+    const fmt = new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 2 });
+    const money = value => `${fmt.format(Number(value) || 0)} ₽`;
+
+    function loadJson(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : structuredClone(fallback);
+      } catch {
+        return structuredClone(fallback);
+      }
+    }
+
+    function loadData() {
+      const saved = loadJson(STORE_KEY, null);
+      if (!saved || !saved.settings || !Array.isArray(saved.products)) return structuredClone(DEFAULT_DATA);
+      return {
+        settings: { ...DEFAULT_DATA.settings, ...saved.settings },
+        products: saved.products.map(normalizeProduct)
+      };
+    }
+
+    function normalizeProduct(product) {
+      return {
+        id: product.id || makeId(),
+        category: product.category || "Ассорти",
+        title: product.title || "Новый товар",
+        price: Number(product.price) || 0,
+        unit: product.unit || "шт",
+        stock: product.stock || "В наличии",
+        tag: product.tag || "",
+        description: product.description || "",
+        image: product.image || ""
+      };
+    }
+
+    function makeId() {
+      return `p${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
+    }
+
+    function saveData() {
+      localStorage.setItem(STORE_KEY, JSON.stringify(data));
+      byId("exportData").value = JSON.stringify(data, null, 2);
+    }
+
+    function setStatus(text) {
+      byId("adminStatus").textContent = text;
+      if (text) setTimeout(() => {
+        if (byId("adminStatus").textContent === text) byId("adminStatus").textContent = "";
+      }, 3500);
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[char]));
+    }
+
+    function categories() {
+      return [...new Set(data.products.map(product => product.category).filter(Boolean))];
+    }
+
+    function findProduct(id) {
+      return data.products.find(product => product.id === id);
+    }
+
+    function showDashboard() {
+      byId("loginBox").classList.add("hidden");
+      byId("dashboard").classList.add("open");
+      fillSettings();
+      renderProducts();
+      renderOrders();
+      saveData();
+    }
+
+    function logout() {
+      sessionStorage.removeItem(ADMIN_SESSION_KEY);
+      byId("dashboard").classList.remove("open");
+      byId("loginBox").classList.remove("hidden");
+      byId("pinInput").value = "";
+    }
+
+    function fillSettings() {
+      const s = data.settings;
+      byId("adminTitle").textContent = s.brand;
+      byId("setBrand").value = s.brand;
+      byId("setKicker").value = s.kicker;
+      byId("setHeroTitle").value = s.heroTitle;
+      byId("setHeroText").value = s.heroText;
+      byId("setNotice").value = s.notice;
+      byId("setTelegram").value = s.telegram;
+      byId("setPhone").value = s.phone;
+      byId("setBotToken").value = s.botToken || "";
+      byId("setChatId").value = s.chatId || "";
+      byId("setMinOrder").value = s.minOrder;
+      byId("setDeliveryFrom").value = s.deliveryFrom;
+      byId("setCities").value = s.cities;
+      byId("setPickup").value = s.pickup;
+      byId("setPayment").value = s.payment;
+      byId("setPin").value = "";
+      byId("exportData").value = JSON.stringify(data, null, 2);
+    }
+
+    function saveSettings() {
+      const newPin = byId("setPin").value.trim();
+      data.settings = {
+        ...data.settings,
+        brand: byId("setBrand").value.trim() || DEFAULT_DATA.settings.brand,
+        kicker: byId("setKicker").value.trim() || DEFAULT_DATA.settings.kicker,
+        heroTitle: byId("setHeroTitle").value.trim() || DEFAULT_DATA.settings.heroTitle,
+        heroText: byId("setHeroText").value.trim() || DEFAULT_DATA.settings.heroText,
+        notice: byId("setNotice").value.trim() || DEFAULT_DATA.settings.notice,
+        telegram: byId("setTelegram").value.replace(/^@/, "").trim() || "test1234",
+        botToken: byId("setBotToken").value.trim(),
+        chatId: byId("setChatId").value.trim(),
+        phone: byId("setPhone").value.trim(),
+        minOrder: Math.max(0, Number(byId("setMinOrder").value) || 0),
+        deliveryFrom: Math.max(0, Number(byId("setDeliveryFrom").value) || 0),
+        cities: byId("setCities").value.trim() || DEFAULT_DATA.settings.cities,
+        pickup: byId("setPickup").value.trim() || DEFAULT_DATA.settings.pickup,
+        payment: byId("setPayment").value.trim() || DEFAULT_DATA.settings.payment,
+        adminPin: newPin || data.settings.adminPin
+      };
+      saveData();
+      fillSettings();
+      setStatus("Настройки сохранены.");
+    }
+
+    function renderCategoryOptions() {
+      const datalist = byId("categoryOptions");
+      datalist.innerHTML = "";
+      categories().forEach(category => {
+        const option = document.createElement("option");
+        option.value = category;
+        datalist.appendChild(option);
+      });
+    }
+
+    function renderProducts() {
+      renderCategoryOptions();
+      const query = byId("productSearch").value.trim().toLowerCase();
+      const list = byId("productList");
+      list.innerHTML = "";
+      data.products
+        .filter(product => `${product.title} ${product.category} ${product.tag}`.toLowerCase().includes(query))
+        .forEach((product, shownIndex) => {
+          const realIndex = data.products.findIndex(item => item.id === product.id);
+          const item = document.createElement("div");
+          item.className = `item${product.id === selectedProductId ? " active" : ""}`;
+          item.innerHTML = `
+            <strong>${escapeHtml(product.title)}</strong>
+            <span class="muted">${escapeHtml(product.category)} · ${money(product.price)}</span>
+            <div class="mini-actions">
+              <button type="button" data-edit="${product.id}">Edit</button>
+              <button type="button" data-up="${product.id}" ${realIndex === 0 ? "disabled" : ""}>↑</button>
+              <button type="button" data-down="${product.id}" ${realIndex === data.products.length - 1 ? "disabled" : ""}>↓</button>
+              <button class="danger" type="button" data-remove="${product.id}">×</button>
+            </div>
+          `;
+          list.appendChild(item);
+        });
+
+      if (!list.children.length) {
+        list.innerHTML = `<div class="item"><span class="muted">Ничего не найдено.</span></div>`;
+      }
+    }
+
+    function clearProductForm() {
+      selectedProductId = "";
+      byId("productFormTitle").textContent = "Новый товар";
+      byId("prodTitle").value = "";
+      byId("prodCategory").value = categories()[0] || "Ассорти";
+      byId("prodPrice").value = "";
+      byId("prodUnit").value = "шт";
+      byId("prodStock").value = "В наличии";
+      byId("prodTag").value = "";
+      byId("prodDesc").value = "";
+      byId("prodImage").value = "";
+      renderProducts();
+    }
+
+    function editProduct(id) {
+      const product = findProduct(id);
+      if (!product) return;
+      selectedProductId = id;
+      byId("productFormTitle").textContent = "Редактирование товара";
+      byId("prodTitle").value = product.title;
+      byId("prodCategory").value = product.category;
+      byId("prodPrice").value = product.price;
+      byId("prodUnit").value = product.unit;
+      byId("prodStock").value = product.stock;
+      byId("prodTag").value = product.tag;
+      byId("prodDesc").value = product.description;
+      byId("prodImage").value = product.image;
+      renderProducts();
+    }
+
+    function saveProduct() {
+      const product = normalizeProduct({
+        id: selectedProductId || makeId(),
+        title: byId("prodTitle").value.trim(),
+        category: byId("prodCategory").value.trim(),
+        price: byId("prodPrice").value,
+        unit: byId("prodUnit").value.trim(),
+        stock: byId("prodStock").value.trim(),
+        tag: byId("prodTag").value.trim(),
+        description: byId("prodDesc").value.trim(),
+        image: byId("prodImage").value.trim()
+      });
+      if (!product.title || !product.category) {
+        setStatus("Заполните название и категорию товара.");
+        return;
+      }
+      const index = data.products.findIndex(item => item.id === product.id);
+      if (index >= 0) data.products[index] = product;
+      else data.products.push(product);
+      selectedProductId = product.id;
+      saveData();
+      renderProducts();
+      setStatus("Товар сохранен.");
+    }
+
+    function removeProduct(id) {
+      data.products = data.products.filter(product => product.id !== id);
+      if (selectedProductId === id) clearProductForm();
+      saveData();
+      renderProducts();
+      setStatus("Товар удален.");
+    }
+
+    function moveProduct(id, direction) {
+      const index = data.products.findIndex(product => product.id === id);
+      const next = index + direction;
+      if (index < 0 || next < 0 || next >= data.products.length) return;
+      const [product] = data.products.splice(index, 1);
+      data.products.splice(next, 0, product);
+      saveData();
+      renderProducts();
+    }
+
+    function renderOrders() {
+      const orders = loadJson(ORDERS_KEY, []);
+      const list = byId("ordersList");
+      list.innerHTML = "";
+      if (!orders.length) {
+        list.innerHTML = `<div class="item"><span class="muted">Заявок пока нет.</span></div>`;
+        return;
+      }
+      orders.forEach(order => {
+        const item = document.createElement("div");
+        item.className = "item";
+        item.innerHTML = `
+          <strong>${escapeHtml(order.createdAt)} · ${money(order.total)}</strong>
+          <textarea class="order-text" readonly>${escapeHtml(order.text)}</textarea>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll(".tab").forEach(button => button.classList.toggle("active", button.dataset.tab === tab));
+      document.querySelectorAll(".page").forEach(page => page.classList.toggle("hidden", page.dataset.page !== tab));
+      if (tab === "orders") renderOrders();
+      if (tab === "data") byId("exportData").value = JSON.stringify(data, null, 2);
+    }
+
+    function importData() {
+      try {
+        const incoming = JSON.parse(byId("importData").value);
+        if (!incoming.settings || !Array.isArray(incoming.products)) throw new Error("bad data");
+        data = {
+          settings: { ...DEFAULT_DATA.settings, ...incoming.settings },
+          products: incoming.products.map(normalizeProduct)
+        };
+        selectedProductId = "";
+        saveData();
+        fillSettings();
+        renderProducts();
+        setStatus("Импорт применен.");
+      } catch {
+        setStatus("Не удалось импортировать JSON. Проверьте формат.");
+      }
+    }
+
+    function bind() {
+      byId("loginBtn").addEventListener("click", () => {
+        if (byId("pinInput").value === data.settings.adminPin) {
+          sessionStorage.setItem(ADMIN_SESSION_KEY, "1");
+          showDashboard();
+        } else {
+          byId("loginStatus").textContent = "Неверный PIN.";
+          byId("pinInput").value = "";
+        }
+      });
+      byId("pinInput").addEventListener("keydown", event => {
+        if (event.key === "Enter") byId("loginBtn").click();
+      });
+      byId("logoutBtn").addEventListener("click", logout);
+      byId("refreshBtn").addEventListener("click", () => {
+        data = loadData();
+        fillSettings();
+        renderProducts();
+        renderOrders();
+        setStatus("Данные обновлены.");
+      });
+      byId("saveAllBtn").addEventListener("click", saveSettings);
+      byId("saveSettingsBtn").addEventListener("click", saveSettings);
+      byId("tabs").addEventListener("click", event => {
+        const tab = event.target.closest("[data-tab]");
+        if (tab) switchTab(tab.dataset.tab);
+      });
+      byId("productSearch").addEventListener("input", renderProducts);
+      byId("newProductBtn").addEventListener("click", clearProductForm);
+      byId("saveProductBtn").addEventListener("click", saveProduct);
+      byId("deleteProductBtn").addEventListener("click", () => {
+        if (selectedProductId) removeProduct(selectedProductId);
+      });
+      byId("productList").addEventListener("click", event => {
+        const edit = event.target.closest("[data-edit]");
+        const up = event.target.closest("[data-up]");
+        const down = event.target.closest("[data-down]");
+        const remove = event.target.closest("[data-remove]");
+        if (edit) editProduct(edit.dataset.edit);
+        if (up) moveProduct(up.dataset.up, -1);
+        if (down) moveProduct(down.dataset.down, 1);
+        if (remove) removeProduct(remove.dataset.remove);
+      });
+      byId("clearOrdersBtn").addEventListener("click", () => {
+        localStorage.removeItem(ORDERS_KEY);
+        renderOrders();
+      });
+      byId("copyExportBtn").addEventListener("click", async () => {
+        byId("exportData").value = JSON.stringify(data, null, 2);
+        await navigator.clipboard.writeText(byId("exportData").value);
+        setStatus("JSON скопирован.");
+      });
+      byId("importBtn").addEventListener("click", importData);
+      byId("resetBtn").addEventListener("click", () => {
+        data = structuredClone(DEFAULT_DATA);
+        selectedProductId = "";
+        saveData();
+        fillSettings();
+        renderProducts();
+        clearProductForm();
+        setStatus("Сайт сброшен к базовой версии.");
+      });
+    }
+
+    bind();
+    fillSettings();
+    clearProductForm();
+    if (sessionStorage.getItem(ADMIN_SESSION_KEY) === "1") showDashboard();
+  </script>
+</body>
+</html>
