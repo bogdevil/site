@@ -329,6 +329,8 @@
             <div class="grid-2">
               <div class="field"><label>Telegram username</label><input id="setTelegram" placeholder="test1234"></div>
               <div class="field"><label>Телефон</label><input id="setPhone" placeholder="+7..."></div>
+              <div class="field"><label>Bot token</label><input id="setBotToken" placeholder="123456:ABC..."></div>
+              <div class="field"><label>CHAT_ID</label><input id="setChatId" placeholder="6671680947"></div>
               <div class="field"><label>Минимальный заказ, ₽</label><input id="setMinOrder" type="number" min="0"></div>
               <div class="field"><label>Доставка от, ₽</label><input id="setDeliveryFrom" type="number" min="0"></div>
             </div>
@@ -429,6 +431,8 @@
         heroText: "Выбирайте позиции из каталога, собирайте заказ в корзине и отправляйте заявку в Telegram. Актуальные цены и условия меняются прямо из админ-панели.",
         notice: "Единые цены при любом количестве",
         telegram: "test1234",
+        botToken: "8758764331:AAF4RgscjVXdYqWfoNGdmTVqSdaoM0SXXZE",
+        chatId: "6671680947",
         phone: "",
         minOrder: 5000,
         deliveryFrom: 10000,
@@ -551,6 +555,8 @@
       byId("setNotice").value = s.notice;
       byId("setTelegram").value = s.telegram;
       byId("setPhone").value = s.phone;
+      byId("setBotToken").value = s.botToken || "";
+      byId("setChatId").value = s.chatId || "";
       byId("setMinOrder").value = s.minOrder;
       byId("setDeliveryFrom").value = s.deliveryFrom;
       byId("setCities").value = s.cities;
@@ -570,6 +576,8 @@
         heroText: byId("setHeroText").value.trim() || DEFAULT_DATA.settings.heroText,
         notice: byId("setNotice").value.trim() || DEFAULT_DATA.settings.notice,
         telegram: byId("setTelegram").value.replace(/^@/, "").trim() || "test1234",
+        botToken: byId("setBotToken").value.trim(),
+        chatId: byId("setChatId").value.trim(),
         phone: byId("setPhone").value.trim(),
         minOrder: Math.max(0, Number(byId("setMinOrder").value) || 0),
         deliveryFrom: Math.max(0, Number(byId("setDeliveryFrom").value) || 0),
